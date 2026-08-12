@@ -5,6 +5,7 @@ sqlalchemy
 pydantic
 python-multipart
 pdfminer.six
+pi-heif
 requests
 python-dotenv
 
