@@ -2,13 +2,16 @@ fastapi
 uvicorn[standard]
 
 # Database / API
+
 sqlalchemy
+psycopg2-binary
 pydantic
 python-multipart
 requests
 python-dotenv
 
 # LangChain
+
 langchain
 langchain-core
 langchain-community
@@ -16,37 +19,46 @@ langchain-huggingface
 langchain-chroma
 
 # Hugging Face
+
 huggingface-hub
 
 # Embeddings / Vector DB
+
 sentence-transformers
 chromadb
 
 # Supabase
+
 supabase
 
 # Document extraction
+
 unstructured
 unstructured-inference
 pdfminer.six
 pi-heif
 
 # Microsoft Office documents
+
 python-docx
 openpyxl
 python-pptx
 
 # PDF / image processing
+
 pypdf
 Pillow
 
 # Additional PDF dependencies
+
 pdf2image
 pdfplumber
 
 # HTML / web documents
+
 beautifulsoup4
 lxml
 
 # XML / Office support
+
 python-magic
