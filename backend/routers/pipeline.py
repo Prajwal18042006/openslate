@@ -33,12 +33,6 @@ from supabase import create_client, Client
 from backend.database import get_db
 from backend.models import Document, Chunk
 
-from backend.services.extractor import extract_document
-from backend.services.chunker import chunk_document
-from backend.services.summarizer import summarize_chunks
-from backend.services.embedder import create_embedding_model
-from backend.services.vector_store import create_vector_store
-
 
 # =========================================================
 # Environment
@@ -58,7 +52,7 @@ router = APIRouter(
 
 
 # =========================================================
-# Supabase configuration
+# Supabase Configuration
 # =========================================================
 
 SUPABASE_URL = os.getenv(
@@ -77,13 +71,13 @@ SUPABASE_BUCKET = os.getenv(
 
 if not SUPABASE_URL:
     raise ValueError(
-        "SUPABASE_URL is missing from .env"
+        "SUPABASE_URL is missing from environment variables"
     )
 
 
 if not SUPABASE_SECRET_KEY:
     raise ValueError(
-        "SUPABASE_SECRET_KEY is missing from .env"
+        "SUPABASE_SECRET_KEY is missing from environment variables"
     )
 
 
@@ -103,12 +97,15 @@ print(
 
 
 # =========================================================
-# Parse content type
+# Parse Content Type
 # =========================================================
 
 def _parse_content_type(
     metadata: dict,
 ) -> str:
+    """
+    Extract a simple content type from metadata.
+    """
 
     raw = metadata.get(
         "content_types",
@@ -132,7 +129,7 @@ def _parse_content_type(
 
 
 # =========================================================
-# Persist processed chunks
+# Persist Processed Chunks
 # =========================================================
 
 def persist_chunks(
@@ -141,8 +138,7 @@ def persist_chunks(
     processed_documents,
 ) -> int:
     """
-    Save processed chunks to SQL
-    for UI inspection.
+    Save processed chunks to SQL for UI inspection.
     """
 
     # -----------------------------------------------------
@@ -202,7 +198,7 @@ def persist_chunks(
 
 
 # =========================================================
-# Download document from Supabase
+# Download Document From Supabase
 # =========================================================
 
 def download_document_from_supabase(
@@ -291,7 +287,6 @@ def download_document_from_supabase(
     ).suffix.lower()
 
     if not suffix:
-
         suffix = ".pdf"
 
     # -----------------------------------------------------
@@ -325,7 +320,7 @@ def download_document_from_supabase(
 
 
 # =========================================================
-# Process ONE document
+# Process ONE Document
 # =========================================================
 
 @router.post(
@@ -357,7 +352,37 @@ def process_document(
     """
 
     # =====================================================
-    # Find document in DB
+    # IMPORTANT:
+    # Lazy imports
+    #
+    # These heavy dependencies are imported ONLY when
+    # the user actually processes a document.
+    #
+    # This keeps FastAPI startup lightweight on Render.
+    # =====================================================
+
+    from backend.services.extractor import (
+        extract_document
+    )
+
+    from backend.services.chunker import (
+        chunk_document
+    )
+
+    from backend.services.summarizer import (
+        summarize_chunks
+    )
+
+    from backend.services.embedder import (
+        create_embedding_model
+    )
+
+    from backend.services.vector_store import (
+        create_vector_store
+    )
+
+    # =====================================================
+    # Find Document in DB
     # =====================================================
 
     doc = (
@@ -376,7 +401,7 @@ def process_document(
         )
 
     # =====================================================
-    # Storage path
+    # Storage Path
     # =====================================================
 
     storage_path = doc.file_path
@@ -493,7 +518,7 @@ def process_document(
         )
 
         # -------------------------------------------------
-        # Chunk statistics
+        # Chunk Statistics
         # -------------------------------------------------
 
         chunk_sizes = [
@@ -513,6 +538,7 @@ def process_document(
         steps["chunk"] = {
             "status": "done",
             "total_chunks": len(chunks),
+
             "avg_chars": (
                 round(
                     sum(chunk_sizes)
@@ -522,11 +548,13 @@ def process_document(
                 if chunk_sizes
                 else 0
             ),
+
             "max_chars": (
                 max(chunk_sizes)
                 if chunk_sizes
                 else 0
             ),
+
             "min_chars": (
                 min(chunk_sizes)
                 if chunk_sizes
@@ -568,7 +596,7 @@ def process_document(
         )
 
         # =================================================
-        # Save chunks to SQL
+        # Save Chunks to SQL
         # =================================================
 
         stored_count = persist_chunks(
@@ -644,7 +672,7 @@ def process_document(
         )
 
         # =================================================
-        # Mark ready
+        # Mark Ready
         # =================================================
 
         doc.status = "ready"
@@ -662,7 +690,7 @@ def process_document(
         }
 
     # =====================================================
-    # HTTP exception
+    # HTTP Exception
     # =====================================================
 
     except HTTPException:
@@ -674,7 +702,7 @@ def process_document(
         raise
 
     # =====================================================
-    # General exception
+    # General Exception
     # =====================================================
 
     except Exception as e:
@@ -695,7 +723,7 @@ def process_document(
         )
 
     # =====================================================
-    # Cleanup
+    # Cleanup Temporary File
     # =====================================================
 
     finally:
@@ -729,7 +757,7 @@ def process_document(
 
 
 # =========================================================
-# Process ALL documents of a project
+# Process ALL Documents of a Project
 # =========================================================
 
 @router.post(
@@ -748,7 +776,7 @@ def process_project_documents(
     """
 
     # =====================================================
-    # Find all project documents
+    # Find All Project Documents
     # =====================================================
 
     documents = (
@@ -789,7 +817,7 @@ def process_project_documents(
     results = []
 
     # =====================================================
-    # Process every document
+    # Process Every Document
     # =====================================================
 
     for index, document in enumerate(
@@ -819,7 +847,7 @@ def process_project_documents(
         try:
 
             # -------------------------------------------------
-            # Reuse existing pipeline
+            # Reuse Existing Pipeline
             # -------------------------------------------------
 
             result = process_document(
