@@ -1,15 +1,26 @@
 import axios from 'axios'
 
-// Base Axios instance - proxied via Vite to http://localhost:8000
+// =========================================================
+// API Configuration
+// =========================================================
+
+// Production Backend
+const API_BASE_URL =
+  'https://openslate-ug9b.onrender.com/api'
+
+// Axios instance
 const api = axios.create({
-  baseURL: '/api',
-  timeout: 120000, // 2 min for pipeline processing
+  baseURL: API_BASE_URL,
+  timeout: 120000,
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
-// Response interceptor for error handling
+// =========================================================
+// Response Interceptor
+// =========================================================
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -17,6 +28,7 @@ api.interceptors.response.use(
       err.response?.data?.detail ||
       err.message ||
       'Something went wrong'
+
     return Promise.reject(new Error(msg))
   }
 )
@@ -26,10 +38,17 @@ api.interceptors.response.use(
 // =========================================================
 
 export const projectsApi = {
-  getAll: () => api.get('/projects/').then((r) => r.data),
-  getOne: (id) => api.get(`/projects/${id}`).then((r) => r.data),
-  create: (data) => api.post('/projects/', data).then((r) => r.data),
-  delete: (id) => api.delete(`/projects/${id}`).then((r) => r.data),
+  getAll: () =>
+    api.get('/projects/').then((r) => r.data),
+
+  getOne: (id) =>
+    api.get(`/projects/${id}`).then((r) => r.data),
+
+  create: (data) =>
+    api.post('/projects/', data).then((r) => r.data),
+
+  delete: (id) =>
+    api.delete(`/projects/${id}`).then((r) => r.data),
 }
 
 // =========================================================
@@ -38,27 +57,46 @@ export const projectsApi = {
 
 export const documentsApi = {
   getByProject: (projectId) =>
-    api.get(`/documents/project/${projectId}`).then((r) => r.data),
+    api
+      .get(`/documents/project/${projectId}`)
+      .then((r) => r.data),
 
-  getOne: (id) => api.get(`/documents/${id}`).then((r) => r.data),
+  getOne: (id) =>
+    api
+      .get(`/documents/${id}`)
+      .then((r) => r.data),
 
   upload: (projectId, file, onProgress) => {
     const formData = new FormData()
+
     formData.append('file', file)
     formData.append('project_id', projectId)
 
     return api
       .post('/documents/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+
         onUploadProgress: (e) => {
-          const pct = Math.round((e.loaded * 100) / e.total)
-          if (onProgress) onProgress(pct)
+          if (e.total) {
+            const pct = Math.round(
+              (e.loaded * 100) / e.total
+            )
+
+            if (onProgress) {
+              onProgress(pct)
+            }
+          }
         },
       })
       .then((r) => r.data)
   },
 
-  delete: (id) => api.delete(`/documents/${id}`).then((r) => r.data),
+  delete: (id) =>
+    api
+      .delete(`/documents/${id}`)
+      .then((r) => r.data),
 }
 
 // =========================================================
@@ -67,10 +105,14 @@ export const documentsApi = {
 
 export const pipelineApi = {
   process: (documentId) =>
-    api.post(`/pipeline/process/${documentId}`).then((r) => r.data),
+    api
+      .post(`/pipeline/process/${documentId}`)
+      .then((r) => r.data),
 
   status: (documentId) =>
-    api.get(`/pipeline/status/${documentId}`).then((r) => r.data),
+    api
+      .get(`/pipeline/status/${documentId}`)
+      .then((r) => r.data),
 }
 
 // =========================================================
@@ -80,11 +122,20 @@ export const pipelineApi = {
 export const chunksApi = {
   getByDocument: (documentId, q = '') => {
     const params = q ? { q } : {}
-    return api.get(`/documents/${documentId}/chunks`, { params }).then((r) => r.data)
+
+    return api
+      .get(`/documents/${documentId}/chunks`, {
+        params,
+      })
+      .then((r) => r.data)
   },
 
   getOne: (documentId, chunkId) =>
-    api.get(`/documents/${documentId}/chunks/${chunkId}`).then((r) => r.data),
+    api
+      .get(
+        `/documents/${documentId}/chunks/${chunkId}`
+      )
+      .then((r) => r.data),
 }
 
 // =========================================================
@@ -93,13 +144,22 @@ export const chunksApi = {
 
 export const chatApi = {
   ask: (query, projectId) =>
-    api.post('/chat/ask', { query, project_id: projectId }).then((r) => r.data),
+    api
+      .post('/chat/ask', {
+        query,
+        project_id: projectId,
+      })
+      .then((r) => r.data),
 
   history: (projectId) =>
-    api.get(`/chat/history/${projectId}`).then((r) => r.data),
+    api
+      .get(`/chat/history/${projectId}`)
+      .then((r) => r.data),
 
   clearHistory: (projectId) =>
-    api.delete(`/chat/history/${projectId}`).then((r) => r.data),
+    api
+      .delete(`/chat/history/${projectId}`)
+      .then((r) => r.data),
 }
 
 // =========================================================
@@ -107,7 +167,14 @@ export const chatApi = {
 // =========================================================
 
 export const healthApi = {
-  check: () => api.get('/health').then((r) => r.data),
+  check: () =>
+    api
+      .get('/health')
+      .then((r) => r.data),
 }
+
+// =========================================================
+// Default Export
+// =========================================================
 
 export default api
