@@ -1,0 +1,38 @@
+# Environment
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+ragto/
+venv/
+.venv/
+
+# Local database
+*.db
+*.sqlite
+*.sqlite3
+
+# Local Chroma
+backend/chroma_db/
+
+# Local uploads
+backend/uploads/
+
+# Test/sample documents
+*.pdf
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

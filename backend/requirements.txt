@@ -1,0 +1,30 @@
+fastapi
+uvicorn[standard]
+
+sqlalchemy
+pydantic
+python-multipart
+
+requests
+python-dotenv
+
+# LangChain
+langchain
+langchain-core
+langchain-community
+langchain-huggingface
+langchain-chroma
+
+# Embeddings / Vector DB
+sentence-transformers
+chromadb
+huggingface-hub
+
+# Supabase
+supabase
+
+# Document extraction
+unstructured
+python-docx
+openpyxl
+python-pptx
