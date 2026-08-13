@@ -55,18 +55,17 @@ SUPPORTED_EXTENSIONS = {
 
 
 # =========================================================
-# PDF Extraction
+# PDF EXTRACTION - PyMuPDF
 # =========================================================
 
 def _partition_pdf_with_pymupdf(file_path: str):
     """
     Fast text extraction from normal/text-based PDFs.
 
-    Uses PyMuPDF instead of Unstructured for faster
-    CPU-based extraction.
+    Uses PyMuPDF instead of Unstructured.
 
-    Returns Unstructured Text elements so the existing
-    chunker.py remains compatible.
+    Returns Unstructured Text elements so the
+    existing chunker.py remains compatible.
     """
 
     print("\n" + "=" * 60)
@@ -102,15 +101,21 @@ def _partition_pdf_with_pymupdf(file_path: str):
                 continue
 
             element = Text(
-                text=text,
+                text=text
             )
 
-            # Add page metadata when possible
+            # -------------------------------------------------
+            # Add page number metadata
+            # -------------------------------------------------
+
             try:
+
                 element.metadata.page_number = (
                     page_number
                 )
+
             except Exception:
+
                 pass
 
             elements.append(element)
@@ -119,7 +124,10 @@ def _partition_pdf_with_pymupdf(file_path: str):
 
         document.close()
 
-    elapsed = time.time() - start_time
+    elapsed = (
+        time.time()
+        - start_time
+    )
 
     print(
         f"📊 Extracted elements: "
@@ -133,7 +141,14 @@ def _partition_pdf_with_pymupdf(file_path: str):
 
     return elements
 
-def _partition_pdf_with_unstructured(file_path: str):
+
+# =========================================================
+# PDF EXTRACTION - Unstructured Fallback
+# =========================================================
+
+def _partition_pdf_with_unstructured(
+    file_path: str
+):
     """
     Fallback PDF extraction using Unstructured.
 
@@ -178,7 +193,8 @@ def _partition_pdf_with_unstructured(file_path: str):
         )
 
         elapsed = (
-            time.time() - start_time
+            time.time()
+            - start_time
         )
 
         print(
@@ -196,7 +212,8 @@ def _partition_pdf_with_unstructured(file_path: str):
     except Exception as e:
 
         elapsed = (
-            time.time() - start_time
+            time.time()
+            - start_time
         )
 
         print("\n" + "=" * 60)
@@ -237,7 +254,212 @@ def _partition_pdf_with_unstructured(file_path: str):
 
 
 # =========================================================
-# DOC Extraction
+# MAIN PDF EXTRACTION
+# =========================================================
+
+def _partition_pdf(file_path: str):
+    """
+    Extract PDF content.
+
+    Flow:
+
+        PyMuPDF
+            ↓
+        Text found?
+            ↓ YES
+        Return elements
+            ↓ NO
+        Unstructured fallback
+            ↓
+        Return elements
+    """
+
+    print("\n" + "=" * 60)
+    print("📄 PDF EXTRACTION STARTED")
+    print("=" * 60)
+
+    print(
+        f"📁 File: {file_path}"
+    )
+
+    print(
+        "⚡ Primary parser: PyMuPDF"
+    )
+
+    print(
+        "🖥️ Device: CPU"
+    )
+
+    overall_start = time.time()
+
+    # =====================================================
+    # STEP 1 - PyMuPDF
+    # =====================================================
+
+    try:
+
+        elements = _partition_pdf_with_pymupdf(
+            file_path
+        )
+
+        total_text = sum(
+            len(str(element).strip())
+            for element in elements
+            if str(element).strip()
+        )
+
+        print(
+            f"📝 Extracted text characters: "
+            f"{total_text}"
+        )
+
+        # -------------------------------------------------
+        # Normal text PDF
+        # -------------------------------------------------
+
+        if (
+            elements
+            and total_text >= 50
+        ):
+
+            elapsed = (
+                time.time()
+                - overall_start
+            )
+
+            print(
+                "✅ PyMuPDF produced usable text"
+            )
+
+            print(
+                f"⏱️ Total PDF extraction time: "
+                f"{elapsed:.2f} seconds"
+            )
+
+            print("=" * 60)
+            print(
+                "🎉 PDF EXTRACTION FINISHED"
+            )
+            print("=" * 60)
+
+            return elements
+
+        # -------------------------------------------------
+        # Scanned / image PDF
+        # -------------------------------------------------
+
+        print(
+            "⚠️ PyMuPDF returned little/no text."
+        )
+
+        print(
+            "🔄 Switching to Unstructured fallback..."
+        )
+
+    except Exception as e:
+
+        print(
+            "⚠️ PyMuPDF extraction failed:"
+        )
+
+        print(
+            f"❌ {type(e).__name__}: "
+            f"{str(e)}"
+        )
+
+        print(
+            "🔄 Switching to Unstructured fallback..."
+        )
+
+    # =====================================================
+    # STEP 2 - Unstructured fallback
+    # =====================================================
+
+    try:
+
+        print(
+            "\n🚀 Starting Unstructured fallback..."
+        )
+
+        elements = (
+            _partition_pdf_with_unstructured(
+                file_path
+            )
+        )
+
+        elapsed = (
+            time.time()
+            - overall_start
+        )
+
+        print(
+            "✅ Fallback completed"
+        )
+
+        print(
+            f"📊 Extracted elements: "
+            f"{len(elements)}"
+        )
+
+        print(
+            f"⏱️ Total PDF extraction time: "
+            f"{elapsed:.2f} seconds"
+        )
+
+        print("=" * 60)
+        print(
+            "🎉 PDF EXTRACTION FINISHED"
+        )
+        print("=" * 60)
+
+        return elements
+
+    except Exception as e:
+
+        elapsed = (
+            time.time()
+            - overall_start
+        )
+
+        print("\n" + "=" * 60)
+        print("❌ PDF EXTRACTION FAILED")
+        print("=" * 60)
+
+        print(
+            f"⏱️ Failed after: "
+            f"{elapsed:.2f} seconds"
+        )
+
+        print(
+            f"❌ Error type: "
+            f"{type(e).__name__}"
+        )
+
+        print(
+            f"❌ Error message: "
+            f"{str(e)}"
+        )
+
+        print(
+            f"❌ Full exception: "
+            f"{repr(e)}"
+        )
+
+        import traceback
+
+        print(
+            "\n🔍 Full traceback:"
+        )
+
+        traceback.print_exc()
+
+        print("=" * 60)
+
+        raise
+
+
+# =========================================================
+# DOC EXTRACTION
 # =========================================================
 
 def _partition_doc(file_path: str):
@@ -261,7 +483,7 @@ def _partition_doc(file_path: str):
 
 
 # =========================================================
-# DOCX Extraction
+# DOCX EXTRACTION
 # =========================================================
 
 def _partition_docx(file_path: str):
@@ -285,7 +507,7 @@ def _partition_docx(file_path: str):
 
 
 # =========================================================
-# TXT Extraction
+# TXT EXTRACTION
 # =========================================================
 
 def _partition_text(file_path: str):
@@ -309,7 +531,7 @@ def _partition_text(file_path: str):
 
 
 # =========================================================
-# HTML Extraction
+# HTML EXTRACTION
 # =========================================================
 
 def _partition_html(file_path: str):
@@ -333,7 +555,7 @@ def _partition_html(file_path: str):
 
 
 # =========================================================
-# CSV Extraction
+# CSV EXTRACTION
 # =========================================================
 
 def _partition_csv(file_path: str):
@@ -357,7 +579,7 @@ def _partition_csv(file_path: str):
 
 
 # =========================================================
-# XLSX Extraction
+# XLSX EXTRACTION
 # =========================================================
 
 def _partition_xlsx(file_path: str):
@@ -381,7 +603,7 @@ def _partition_xlsx(file_path: str):
 
 
 # =========================================================
-# PPTX Extraction
+# PPTX EXTRACTION
 # =========================================================
 
 def _partition_pptx(file_path: str):
@@ -405,7 +627,7 @@ def _partition_pptx(file_path: str):
 
 
 # =========================================================
-# Markdown Extraction
+# MARKDOWN EXTRACTION
 # =========================================================
 
 def _partition_markdown(file_path: str):
@@ -429,7 +651,7 @@ def _partition_markdown(file_path: str):
 
 
 # =========================================================
-# RTF Extraction
+# RTF EXTRACTION
 # =========================================================
 
 def _partition_rtf(file_path: str):
@@ -453,7 +675,7 @@ def _partition_rtf(file_path: str):
 
 
 # =========================================================
-# Webpage Extraction
+# WEBPAGE EXTRACTION
 # =========================================================
 
 def _partition_webpage(html: str):
@@ -477,10 +699,12 @@ def _partition_webpage(html: str):
 
 
 # =========================================================
-# Download URL
+# DOWNLOAD URL
 # =========================================================
 
-def _download_url(url: str) -> requests.Response:
+def _download_url(
+    url: str
+) -> requests.Response:
 
     print(
         f"🌐 Downloading URL: {url}"
@@ -523,10 +747,12 @@ def _download_url(url: str) -> requests.Response:
 
 
 # =========================================================
-# Extract From URL
+# EXTRACT FROM URL
 # =========================================================
 
-def _extract_from_url(source: str):
+def _extract_from_url(
+    source: str
+):
 
     print("\n" + "=" * 60)
     print("🌐 REMOTE EXTRACTION")
@@ -557,7 +783,8 @@ def _extract_from_url(source: str):
     # =====================================================
 
     if (
-        content_type == "application/pdf"
+        content_type
+        == "application/pdf"
         or source.lower()
         .split("?")[0]
         .endswith(".pdf")
@@ -657,10 +884,12 @@ def _extract_from_url(source: str):
 
 
 # =========================================================
-# Extract From Local File
+# EXTRACT FROM LOCAL FILE
 # =========================================================
 
-def _extract_from_file(source: str):
+def _extract_from_file(
+    source: str
+):
 
     print("\n" + "=" * 60)
     print("📁 LOCAL FILE EXTRACTION")
@@ -878,17 +1107,21 @@ def _extract_from_file(source: str):
     )
 
     print("=" * 60)
-    print("🎉 EXTRACTION FINISHED")
+    print(
+        "🎉 EXTRACTION FINISHED"
+    )
     print("=" * 60)
 
     return elements
 
 
 # =========================================================
-# Main Extraction Function
+# MAIN EXTRACTION FUNCTION
 # =========================================================
 
-def extract_document(source: str):
+def extract_document(
+    source: str
+):
     """
     Main document extraction function.
 
@@ -907,7 +1140,9 @@ def extract_document(source: str):
     source = source.strip()
 
     print("\n" + "=" * 60)
-    print("🚀 DOCUMENT EXTRACTION REQUEST")
+    print(
+        "🚀 DOCUMENT EXTRACTION REQUEST"
+    )
     print("=" * 60)
 
     print(
@@ -939,7 +1174,7 @@ def extract_document(source: str):
 
 
 # =========================================================
-# Command Line Testing
+# COMMAND LINE TESTING
 # =========================================================
 
 if __name__ == "__main__":
