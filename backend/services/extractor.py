@@ -133,7 +133,6 @@ def _partition_pdf_with_pymupdf(file_path: str):
 
     return elements
 
-
 def _partition_pdf_with_unstructured(file_path: str):
     """
     Fallback PDF extraction using Unstructured.
@@ -145,184 +144,94 @@ def _partition_pdf_with_unstructured(file_path: str):
     print("🔄 FALLBACK PDF EXTRACTION - Unstructured")
     print("=" * 60)
 
-    start_time = time.time()
-
-    from unstructured.partition.pdf import partition_pdf
-
-    elements = partition_pdf(
-        filename=file_path,
-        strategy="fast",
-    )
-
-    elapsed = time.time() - start_time
-
-    print(
-        f"📊 Extracted elements: "
-        f"{len(elements)}"
-    )
-
-    print(
-        f"⏱️ Unstructured extraction time: "
-        f"{elapsed:.2f} seconds"
-    )
-
-    return elements
-
-
-def _partition_pdf(file_path: str):
-    """
-    Extract PDF content.
-
-    Strategy:
-
-    1. Try PyMuPDF first.
-       This is very fast for normal text PDFs.
-
-    2. If PyMuPDF fails or produces no useful text,
-       fallback to Unstructured.
-
-    This keeps support for complex/scanned PDFs.
-    """
-
-    print("\n" + "=" * 60)
-    print("📄 PDF EXTRACTION STARTED")
-    print("=" * 60)
-
     print(
         f"📁 File: {file_path}"
     )
 
     print(
-        "⚡ Primary parser: PyMuPDF"
+        "⏳ Starting Unstructured PDF extraction..."
     )
 
     print(
         "🖥️ Device: CPU"
     )
 
-    overall_start = time.time()
-
-    # =====================================================
-    # Try PyMuPDF
-    # =====================================================
+    start_time = time.time()
 
     try:
 
-        elements = _partition_pdf_with_pymupdf(
-            file_path
-        )
-
-        # Calculate extracted text
-        total_text = sum(
-            len(str(element).strip())
-            for element in elements
-            if str(element).strip()
+        from unstructured.partition.pdf import (
+            partition_pdf
         )
 
         print(
-            f"📝 Extracted text characters: "
-            f"{total_text}"
-        )
-
-        # =================================================
-        # Successful text extraction
-        # =================================================
-
-        if elements and total_text >= 50:
-
-            elapsed = (
-                time.time()
-                - overall_start
-            )
-
-            print(
-                "✅ PyMuPDF produced usable text"
-            )
-
-            print(
-                f"⏱️ Total PDF extraction time: "
-                f"{elapsed:.2f} seconds"
-            )
-
-            print("=" * 60)
-            print(
-                "🎉 PDF EXTRACTION FINISHED"
-            )
-            print("=" * 60)
-
-            return elements
-
-        # =================================================
-        # Empty / insufficient text
-        # =================================================
-
-        print(
-            "⚠️ PyMuPDF returned little/no text."
+            "📦 Unstructured PDF parser imported"
         )
 
         print(
-            "🔄 Switching to Unstructured fallback..."
+            "🚀 Calling partition_pdf()..."
         )
 
-    except Exception as e:
-
-        print(
-            "⚠️ PyMuPDF extraction failed:"
-        )
-
-        print(
-            f"   {repr(e)}"
-        )
-
-        print(
-            "🔄 Switching to Unstructured fallback..."
-        )
-
-    # =====================================================
-    # Unstructured Fallback
-    # =====================================================
-
-    try:
-
-        elements = (
-            _partition_pdf_with_unstructured(
-                file_path
-            )
+        elements = partition_pdf(
+            filename=file_path,
+            strategy="fast",
         )
 
         elapsed = (
-            time.time()
-            - overall_start
+            time.time() - start_time
         )
 
         print(
-            f"⏱️ Total PDF extraction time: "
-            f"{elapsed:.2f} seconds"
+            f"✅ Unstructured extraction completed "
+            f"in {elapsed:.2f} seconds"
         )
 
-        print("=" * 60)
         print(
-            "🎉 PDF EXTRACTION FINISHED"
+            f"📊 Extracted elements: "
+            f"{len(elements)}"
         )
-        print("=" * 60)
 
         return elements
 
     except Exception as e:
 
         elapsed = (
-            time.time()
-            - overall_start
+            time.time() - start_time
+        )
+
+        print("\n" + "=" * 60)
+        print("❌ UNSTRUCTURED EXTRACTION FAILED")
+        print("=" * 60)
+
+        print(
+            f"⏱️ Failed after: "
+            f"{elapsed:.2f} seconds"
         )
 
         print(
-            f"❌ PDF extraction failed "
-            f"after {elapsed:.2f} seconds"
+            f"❌ Error type: "
+            f"{type(e).__name__}"
         )
 
         print(
-            f"❌ Error: {repr(e)}"
+            f"❌ Error message: "
+            f"{str(e)}"
         )
+
+        print(
+            f"❌ Full exception: "
+            f"{repr(e)}"
+        )
+
+        import traceback
+
+        print(
+            "\n🔍 Full traceback:"
+        )
+
+        traceback.print_exc()
+
+        print("=" * 60)
 
         raise
 
