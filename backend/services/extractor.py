@@ -1,7 +1,7 @@
 """
-OpenSlate Mini - Document Extraction Utility
+OpenSlate Mini - Fast Document Extraction Utility
 
-Supported local files:
+Supports:
 - PDF
 - DOC
 - DOCX
@@ -16,18 +16,17 @@ Supported local files:
 - Markdown
 - RTF
 
-Supported remote sources:
+Also supports:
 - PDF URLs
 - Webpage URLs
 
-Important:
-All Unstructured imports are lazy-loaded inside functions.
-This prevents heavy document-processing libraries from
-blocking FastAPI startup on Render.
+PDF extraction is optimized for CPU-based deployment
+such as Render.
 """
 
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import requests
@@ -60,26 +59,69 @@ SUPPORTED_EXTENSIONS = {
 
 def _partition_pdf(file_path: str):
     """
-    Extract PDF content.
+    Fast PDF text extraction.
 
-    Includes:
-    - Text
-    - Tables
-    - Images
+    Optimized for CPU environments such as Render.
 
-    Unstructured PDF dependencies are imported only when
-    a PDF is actually processed.
+    NOTE:
+    We intentionally do NOT use:
+        strategy="hi_res"
+        infer_table_structure=True
+        image extraction
+
+    because those operations are much heavier and slower.
     """
 
-    from unstructured.partition.pdf import partition_pdf
+    print("\n" + "=" * 60)
+    print("📄 PDF EXTRACTION STARTED")
+    print("=" * 60)
 
-    return partition_pdf(
-        filename=file_path,
-        strategy="hi_res",
-        infer_table_structure=True,
-        extract_image_block_types=["image"],
-        extract_image_block_to_payload=True,
-    )
+    print(f"📁 File: {file_path}")
+    print("⚡ Strategy: fast")
+    print("🖥️ Device: CPU")
+
+    start_time = time.time()
+
+    try:
+        # Lazy import
+        from unstructured.partition.pdf import partition_pdf
+
+        print("📦 PDF parser loaded")
+
+        elements = partition_pdf(
+            filename=file_path,
+            strategy="fast",
+        )
+
+        elapsed = time.time() - start_time
+
+        print(
+            f"✅ PDF extraction completed "
+            f"in {elapsed:.2f} seconds"
+        )
+
+        print(
+            f"📊 Extracted elements: {len(elements)}"
+        )
+
+        print("=" * 60)
+        print("🎉 PDF EXTRACTION FINISHED")
+        print("=" * 60)
+
+        return elements
+
+    except Exception as e:
+
+        elapsed = time.time() - start_time
+
+        print(
+            f"❌ PDF extraction failed "
+            f"after {elapsed:.2f} seconds"
+        )
+
+        print(f"❌ Error: {repr(e)}")
+
+        raise
 
 
 # =========================================================
@@ -91,11 +133,20 @@ def _partition_doc(file_path: str):
     Extract legacy Microsoft Word .doc files.
     """
 
+    print("📄 Extracting DOC file...")
+
     from unstructured.partition.doc import partition_doc
 
-    return partition_doc(
+    elements = partition_doc(
         filename=file_path
     )
+
+    print(
+        f"✅ DOC extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -107,11 +158,20 @@ def _partition_docx(file_path: str):
     Extract Microsoft Word .docx files.
     """
 
+    print("📄 Extracting DOCX file...")
+
     from unstructured.partition.docx import partition_docx
 
-    return partition_docx(
+    elements = partition_docx(
         filename=file_path
     )
+
+    print(
+        f"✅ DOCX extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -123,11 +183,20 @@ def _partition_text(file_path: str):
     Extract plain text files.
     """
 
+    print("📄 Extracting TXT file...")
+
     from unstructured.partition.text import partition_text
 
-    return partition_text(
+    elements = partition_text(
         filename=file_path
     )
+
+    print(
+        f"✅ TXT extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -136,14 +205,23 @@ def _partition_text(file_path: str):
 
 def _partition_html(file_path: str):
     """
-    Extract HTML documents.
+    Extract HTML files.
     """
+
+    print("🌐 Extracting HTML file...")
 
     from unstructured.partition.html import partition_html
 
-    return partition_html(
+    elements = partition_html(
         filename=file_path
     )
+
+    print(
+        f"✅ HTML extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -155,11 +233,20 @@ def _partition_csv(file_path: str):
     Extract CSV files.
     """
 
+    print("📊 Extracting CSV file...")
+
     from unstructured.partition.csv import partition_csv
 
-    return partition_csv(
+    elements = partition_csv(
         filename=file_path
     )
+
+    print(
+        f"✅ CSV extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -171,11 +258,20 @@ def _partition_xlsx(file_path: str):
     Extract Excel .xlsx files.
     """
 
+    print("📊 Extracting XLSX file...")
+
     from unstructured.partition.xlsx import partition_xlsx
 
-    return partition_xlsx(
+    elements = partition_xlsx(
         filename=file_path
     )
+
+    print(
+        f"✅ XLSX extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -187,11 +283,20 @@ def _partition_pptx(file_path: str):
     Extract PowerPoint .pptx files.
     """
 
+    print("📊 Extracting PPTX file...")
+
     from unstructured.partition.pptx import partition_pptx
 
-    return partition_pptx(
+    elements = partition_pptx(
         filename=file_path
     )
+
+    print(
+        f"✅ PPTX extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -203,11 +308,20 @@ def _partition_markdown(file_path: str):
     Extract Markdown files.
     """
 
+    print("📝 Extracting Markdown file...")
+
     from unstructured.partition.md import partition_md
 
-    return partition_md(
+    elements = partition_md(
         filename=file_path
     )
+
+    print(
+        f"✅ Markdown extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -219,11 +333,20 @@ def _partition_rtf(file_path: str):
     Extract Rich Text Format files.
     """
 
+    print("📝 Extracting RTF file...")
+
     from unstructured.partition.rtf import partition_rtf
 
-    return partition_rtf(
+    elements = partition_rtf(
         filename=file_path
     )
+
+    print(
+        f"✅ RTF extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -235,11 +358,20 @@ def _partition_webpage(html: str):
     Extract content from an HTML webpage.
     """
 
+    print("🌐 Extracting webpage...")
+
     from unstructured.partition.html import partition_html
 
-    return partition_html(
+    elements = partition_html(
         text=html
     )
+
+    print(
+        f"✅ Webpage extraction completed: "
+        f"{len(elements)} elements"
+    )
+
+    return elements
 
 
 # =========================================================
@@ -250,6 +382,10 @@ def _download_url(url: str) -> requests.Response:
     """
     Download content from a URL.
     """
+
+    print(f"🌐 Downloading URL: {url}")
+
+    start_time = time.time()
 
     response = requests.get(
         url,
@@ -267,6 +403,18 @@ def _download_url(url: str) -> requests.Response:
 
     response.raise_for_status()
 
+    elapsed = time.time() - start_time
+
+    print(
+        f"✅ Download completed in "
+        f"{elapsed:.2f} seconds"
+    )
+
+    print(
+        f"📦 Downloaded size: "
+        f"{len(response.content)} bytes"
+    )
+
     return response
 
 
@@ -282,6 +430,10 @@ def _extract_from_url(source: str):
     - Remote webpage
     """
 
+    print("\n" + "=" * 60)
+    print("🌐 REMOTE EXTRACTION")
+    print("=" * 60)
+
     response = _download_url(source)
 
     content_type = (
@@ -291,9 +443,15 @@ def _extract_from_url(source: str):
     )
 
     # Remove content-type parameters
-    # Example:
-    # application/pdf; charset=binary
-    content_type = content_type.split(";")[0].strip()
+    content_type = (
+        content_type
+        .split(";")[0]
+        .strip()
+    )
+
+    print(
+        f"📌 Content-Type: {content_type}"
+    )
 
     # =====================================================
     # Remote PDF
@@ -301,8 +459,12 @@ def _extract_from_url(source: str):
 
     if (
         content_type == "application/pdf"
-        or source.lower().split("?")[0].endswith(".pdf")
+        or source.lower()
+        .split("?")[0]
+        .endswith(".pdf")
     ):
+
+        print("📄 Remote PDF detected")
 
         temp_path = None
 
@@ -319,6 +481,10 @@ def _extract_from_url(source: str):
 
                 temp_path = temp_file.name
 
+            print(
+                f"📁 Temporary PDF: {temp_path}"
+            )
+
             elements = _partition_pdf(
                 temp_path
             )
@@ -329,6 +495,10 @@ def _extract_from_url(source: str):
 
                 Path(temp_path).unlink(
                     missing_ok=True
+                )
+
+                print(
+                    "🗑️ Temporary PDF removed"
                 )
 
         print(
@@ -345,10 +515,14 @@ def _extract_from_url(source: str):
     if (
         content_type == "text/html"
         or content_type == "application/xhtml+xml"
-        or source.lower().split("?")[0].endswith(
+        or source.lower()
+        .split("?")[0]
+        .endswith(
             (".html", ".htm")
         )
     ):
+
+        print("🌐 Webpage detected")
 
         elements = _partition_webpage(
             response.text
@@ -368,7 +542,8 @@ def _extract_from_url(source: str):
     raise ValueError(
         "Unsupported URL content type: "
         f"{content_type}. "
-        "Only PDF URLs and webpage URLs are supported."
+        "Only PDF URLs and webpage URLs "
+        "are supported."
     )
 
 
@@ -380,6 +555,10 @@ def _extract_from_file(source: str):
     """
     Extract content from a local file.
     """
+
+    print("\n" + "=" * 60)
+    print("📁 LOCAL FILE EXTRACTION")
+    print("=" * 60)
 
     path = Path(source)
 
@@ -409,6 +588,14 @@ def _extract_from_file(source: str):
 
     extension = path.suffix.lower()
 
+    print(
+        f"📄 File: {path.name}"
+    )
+
+    print(
+        f"📌 File type: {extension}"
+    )
+
     # =====================================================
     # Validate Extension
     # =====================================================
@@ -421,13 +608,7 @@ def _extract_from_file(source: str):
             f"{', '.join(sorted(SUPPORTED_EXTENSIONS))}"
         )
 
-    print(
-        f"📄 Local file detected: {path}"
-    )
-
-    print(
-        f"📌 File type: {extension}"
-    )
+    start_time = time.time()
 
     # =====================================================
     # PDF
@@ -509,9 +690,10 @@ def _extract_from_file(source: str):
     elif extension == ".xls":
 
         raise ValueError(
-            "Legacy .xls files are not directly supported "
-            "by this deployment. "
-            "Please convert .xls to .xlsx and upload again."
+            "Legacy .xls files are not directly "
+            "supported by this deployment. "
+            "Please convert .xls to .xlsx "
+            "and upload again."
         )
 
     # =====================================================
@@ -531,9 +713,10 @@ def _extract_from_file(source: str):
     elif extension == ".ppt":
 
         raise ValueError(
-            "Legacy .ppt files are not directly supported "
-            "by this deployment. "
-            "Please convert .ppt to .pptx and upload again."
+            "Legacy .ppt files are not directly "
+            "supported by this deployment. "
+            "Please convert .ppt to .pptx "
+            "and upload again."
         )
 
     # =====================================================
@@ -570,10 +753,21 @@ def _extract_from_file(source: str):
     # Result
     # =====================================================
 
+    elapsed = time.time() - start_time
+
     print(
         f"✅ Successfully extracted "
         f"{len(elements)} elements"
     )
+
+    print(
+        f"⏱️ Extraction time: "
+        f"{elapsed:.2f} seconds"
+    )
+
+    print("=" * 60)
+    print("🎉 EXTRACTION FINISHED")
+    print("=" * 60)
 
     return elements
 
@@ -618,8 +812,12 @@ def extract_document(source: str):
 
     source = source.strip()
 
+    print("\n" + "=" * 60)
+    print("🚀 DOCUMENT EXTRACTION REQUEST")
+    print("=" * 60)
+
     print(
-        f"🔍 Extracting source: {source}"
+        f"🔍 Source: {source}"
     )
 
     # =====================================================
@@ -679,9 +877,7 @@ if __name__ == "__main__":
             "\nFirst 5 elements:"
         )
 
-        print(
-            "=" * 60
-        )
+        print("=" * 60)
 
         for i, element in enumerate(
             elements[:5],
@@ -705,7 +901,8 @@ if __name__ == "__main__":
     except Exception as e:
 
         print(
-            f"\n❌ Extraction failed: {e}"
+            f"\n❌ Extraction failed: "
+            f"{e}"
         )
 
         sys.exit(1)
