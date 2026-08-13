@@ -45,7 +45,7 @@ openpyxl
 python-pptx
 
 # PDF / image processing
-
+PyMuPDF
 pypdf
 Pillow
 

@@ -6,7 +6,7 @@ import axios from 'axios'
 
 // Production Backend
 const API_BASE_URL =
-  'https://openslate-ug9b.onrender.com/api'
+  'http://127.0.0.1:8000/api'
 
 // Axios instance
 const api = axios.create({

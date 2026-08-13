@@ -5,6 +5,7 @@ import ProjectsPage from './pages/ProjectsPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import ChatPage from './pages/ChatPage'
 import Watermark from './components/Watermark'
+import Footer from './components/Footer'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
@@ -54,13 +55,16 @@ function AppRoutes() {
     <div className="app-shell">
       <Watermark />
       <Navbar />
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
-        <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
-        <Route path="/projects/:projectId/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <main className="app-main">
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
+          <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
+          <Route path="/projects/:projectId/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+      <Footer />
     </div>
   )
 }
